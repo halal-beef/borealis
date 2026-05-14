@@ -27,6 +27,7 @@ signals:
     void protocolEvent(const QString &description);
 
 private slots:
+    void deviceConnected(const QBluetoothAddress &address);
     void deviceDiscovered(const QBluetoothDeviceInfo &info);
     void dataAvailable();
     void onDisconnected();
@@ -36,6 +37,8 @@ private:
 
     ProtocolHandler *m_handler;
     QBluetoothDeviceDiscoveryAgent *m_discoveryAgent;
+    QBluetoothLocalDevice m_localDevice;
+    QBluetoothAddress m_pendingAddress;
     QSocketNotifier *m_notifier  = nullptr;
     int m_rawSocket = -1;
 };

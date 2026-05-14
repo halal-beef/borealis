@@ -14,11 +14,21 @@ Connection::Connection(ProtocolHandler *handler, QObject *parent)
     , m_handler(handler)
 {
     m_handler->setParent(this);
-
     m_discoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
     connect(m_discoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered, this, &Connection::deviceDiscovered);
     connect(m_handler, &ProtocolHandler::event, this, &Connection::protocolEvent);
     connect(m_handler, &ProtocolHandler::quirkPacketNeeded, this, &Connection::writeData);
+
+    connect(&m_localDevice, &QBluetoothLocalDevice::deviceConnected, this, &Connection::deviceConnected);
+}
+
+void Connection::deviceConnected(const QBluetoothAddress &address)
+{
+    if (address == m_pendingAddress) {
+        m_pendingAddress = QBluetoothAddress();
+        sleep(2); // Dirty but we have to wait or else the headphones don't handshake properly, nor does it deliver all notifications.
+        tryConnect(address);
+    }
 }
 
 Connection::~Connection()
@@ -60,7 +70,9 @@ void Connection::deviceDiscovered(const QBluetoothDeviceInfo &info)
 
     qDebug() << "Discovered supported device:" << info.name();
     m_discoveryAgent->stop();
-    tryConnect(info.address());
+
+    m_pendingAddress = info.address();
+    qDebug() << "Waiting for computer to connect to" << m_pendingAddress.toString();
 }
 
 void Connection::dataAvailable()

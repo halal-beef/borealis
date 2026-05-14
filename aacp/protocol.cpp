@@ -3,6 +3,12 @@
 
 #include <QDebug>
 #include <QtGlobal>
+#include <QBluetoothAddress>
+#include <QDBusInterface>
+#include <QDBusReply>
+#include <QDBusVariant>
+#include <QDBusConnection>
+#include <QRegularExpression>
 
 namespace AACP {
     AACPHandler::AACPHandler(QObject *parent)
@@ -16,12 +22,39 @@ namespace AACP {
 
     bool AACPHandler::supportsDevice(const QBluetoothDeviceInfo &info) const
     {
-    #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        if (info.manufacturerIds().contains(0x004C))
-            return true;
-    #endif
+        const QString addr = info.address().toString().replace(':', '_');
+        QString path = QStringLiteral("/org/bluez/hci0/dev_%1").arg(addr);
+        QDBusInterface propsIface(QStringLiteral("org.bluez"), path, QStringLiteral("org.freedesktop.DBus.Properties"), QDBusConnection::systemBus());
+ 
+        if (propsIface.isValid())
+        {
+            QDBusReply<QVariant> reply = propsIface.call(QStringLiteral("Get"), QStringLiteral("org.bluez.Device1"), QStringLiteral("Modalias"));
 
-        return !info.manufacturerData(0x004C).isEmpty();
+            if (reply.isValid())
+            {
+                QVariant v = reply.value();
+                QString modalias;
+
+                if (v.canConvert<QDBusVariant>())
+                    modalias = v.value<QDBusVariant>().variant().toString();
+                else
+                    modalias = v.toString();
+
+                if (!modalias.isEmpty())
+                {
+                    QRegularExpression re(QStringLiteral("v([0-9A-Fa-f]{4})"));
+                    QRegularExpressionMatch m = re.match(modalias);
+                    if (m.hasMatch())
+                    {
+                        bool ok = false;
+                        const quint16 vendor = static_cast<quint16>(m.captured(1).toUShort(&ok, 16));
+                        if (ok && vendor == 0x004C)
+                            return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     void AACPHandler::handlePacket(const QByteArray &data)
