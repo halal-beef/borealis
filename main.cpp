@@ -5,6 +5,12 @@
 #include <protocol/battery.h>
 #include <protocol/device_information.h>
 
+void scanForDevices(Connection &connection)
+{
+    qDebug() << "Scanning for devices...";
+    connection.scan();
+}
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
@@ -16,9 +22,10 @@ int main(int argc, char *argv[])
         qDebug() << "Headphones connected";
     });
 
-    QObject::connect(&connection, &Connection::disconnected, []()
+    QObject::connect(&connection, &Connection::disconnected, [&connection]()
     {
         qDebug() << "Headphones disconnected.";
+        scanForDevices(connection);
     });
 
     QObject::connect(&connection, &Connection::protocolEvent, [](const QString &description)
@@ -56,9 +63,7 @@ int main(int argc, char *argv[])
         qDebug() << "  Firmware:" << firmwareVersion;
     });
 
-    qDebug() << "Scanning for headphones...";
-    connection.scan();
+    scanForDevices(connection);
 
     return a.exec();
-
 }
