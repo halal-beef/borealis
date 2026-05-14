@@ -72,12 +72,6 @@ namespace AACP {
         }
     }
 
-
-    void AACPHandler::parseEarDetect(const QByteArray &data)
-    {
-        emit event(QStringLiteral("Ear detection: ") + QString(data.mid(6).toHex()));
-    }
-
     void AACPHandler::parseControl(const QByteArray &data)
     {
         if (data.size() < 8)

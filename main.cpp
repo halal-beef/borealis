@@ -4,6 +4,7 @@
 #include <aacp/aacp_handler.h>
 #include <protocol/battery.h>
 #include <protocol/device_information.h>
+#include <protocol/ear_detection.h>
 
 void scanForDevices(Connection &connection)
 {
@@ -54,13 +55,32 @@ int main(int argc, char *argv[])
         qDebug() << "Battery update:" << compStr << statusStr << level << "%";
     });
 
-    QObject::connect(Protocol::DeviceInformationApi::instance(),
-                     &Protocol::DeviceInformationApi::deviceInformationUpdated,
-                     [](const QString &deviceName, const QStringList &serialNumbers,
-                        const QString &firmwareVersion) {
+    QObject::connect(Protocol::DeviceInformationApi::instance(), &Protocol::DeviceInformationApi::deviceInformationUpdated, [](const QString &deviceName, const QStringList &serialNumbers, const QString &firmwareVersion)
+    {
         qDebug() << "Device:" << deviceName;
         qDebug() << "  Serial Numbers:" << serialNumbers;
         qDebug() << "  Firmware:" << firmwareVersion;
+    });
+
+    QObject::connect(Protocol::EarDetectionApi::instance(), &Protocol::EarDetectionApi::earDetectionUpdated, [](EarComponentGeneric component, EarStatusGeneric status)
+    {
+        const char *compStr = "Unknown component";
+        const char *statusStr = "Unknown";
+
+        switch (component)
+        {
+            case EarComponentGeneric::Left: compStr = "Left"; break;
+            case EarComponentGeneric::Right: compStr = "Right"; break;
+        }
+
+        switch (status)
+        {
+            case EarStatusGeneric::EarIn: statusStr = "Ear In"; break;
+            case EarStatusGeneric::EarOut: statusStr = "Ear Out"; break;
+            case EarStatusGeneric::InCase: statusStr = "In Case"; break;
+            case EarStatusGeneric::Disconnected: statusStr = "Disconnected"; break;
+        }
+        qDebug() << "Ear detection update:" << compStr << statusStr;
     });
 
     scanForDevices(connection);

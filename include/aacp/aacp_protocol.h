@@ -41,9 +41,13 @@ namespace AACP {
         Disconnected = 0x04,
         OptimisedCharging = 0x05,
     };
-}
 
-void aacp_parseBattery(const QByteArray &data);
-void aacp_parseDeviceInformation(const QByteArray &data);
+    enum class EarStatus : quint8 {
+        EarIn = 0x00,
+        EarOut = 0x01,
+        InCase = 0x02,
+        Disconnected = 0x03,
+    };
+}
 
 #endif // AACP_PROTOCOL_H
