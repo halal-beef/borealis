@@ -1,10 +1,16 @@
+#include <unistd.h>
+
 #include <QCoreApplication>
 #include <QDebug>
+
 #include <connection.h>
+
 #include <aacp/aacp_handler.h>
+
 #include <protocol/battery.h>
 #include <protocol/device_information.h>
 #include <protocol/ear_detection.h>
+#include <protocol/mode_switch.h>
 
 void scanForDevices(Connection &connection)
 {
@@ -81,6 +87,18 @@ int main(int argc, char *argv[])
             case EarStatusGeneric::Disconnected: statusStr = "Disconnected"; break;
         }
         qDebug() << "Ear detection update:" << compStr << statusStr;
+    });
+
+    QObject::connect(Protocol::ModeSwitchApi::instance(), &Protocol::ModeSwitchApi::modesAdvertised, [](const Protocol::ModeSwitchApi::ModeTupleList &modes)
+    {
+        qDebug() << "Available listening modes:";
+        for (const auto &mode : modes)
+        {
+            qDebug() << " " << mode.first << mode.second;
+            qDebug() << "Requesting mode update";
+            Protocol::ModeSwitchApi::instance()->updateModeSwitch(mode.first);
+            sleep(1);
+        }
     });
 
     scanForDevices(connection);

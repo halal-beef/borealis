@@ -2,6 +2,7 @@
 #include <aacp/aacp_handler.h>
 
 #include <protocol/device_information.h>
+#include <protocol/mode_switch.h>
 
 #include <QDebug>
 
@@ -34,43 +35,41 @@ namespace AACP {
             return;
         }
 
-        // Device name
-        if (segments.size() > 0 && !segments[0].isEmpty())
+        if (segments.size() < 9)
         {
-            deviceName = QString::fromUtf8(segments[0]);
+            qDebug() << "Unable to identify device. " << segments.size();
         }
 
-        // AirPods Pro 2 have a quirk where another command has to be sent for some features to work
-        if (segments.size() > 1 && !segments[1].isEmpty())
+        for (int i = 0; i < 9; ++i)
         {
-            if(QString::fromUtf8(segments[1]) == "A3048")
+            if(segments[i].isEmpty())
             {
-                qDebug() << "AirPods Pro 2 detected";
-                const QByteArray quirkPkt = QByteArray::fromHex("040004004D00FF00000000000000");
-                emit quirkPacketNeeded(quirkPkt);
+                qDebug() << "Some Device information is empty. Unable to identify.";
+                return;
             }
         }
 
-        // First firmware version field
-        if (segments.size() > 4 && !segments[4].isEmpty())
+        // Device name
+        deviceName = QString::fromUtf8(segments[0]);
+
+        // AirPods Pro 2 have a quirk where another command has to be sent for some features to work
+        if(QString::fromUtf8(segments[1]) == "A3048")
         {
-            firmwareVersion = QString::fromUtf8(segments[4]);
+            qDebug() << "AirPods Pro 2 detected";
+            QByteArray quirkPayload = HEADER;
+            quirkPayload.append(QByteArray::fromHex("D00FF00000000000000"));
+            emit sendPacket(quirkPayload);
         }
+
+        // First firmware version field
+        firmwareVersion = QString::fromUtf8(segments[4]);
 
         // Serial numbers for case, left and right airpods
-        if (segments.size() > 3 && !segments[3].isEmpty())
-        {
-            serialNumbers << QString::fromUtf8(segments[3]);
-        }
-        if (segments.size() > 8 && !segments[8].isEmpty())
-        {
-            serialNumbers << QString::fromUtf8(segments[8]);
-        }
-        if (segments.size() > 9 && !segments[9].isEmpty())
-        {
-            serialNumbers << QString::fromUtf8(segments[9]);
-        }
+        serialNumbers << QString::fromUtf8(segments[3]);
+        serialNumbers << QString::fromUtf8(segments[8]);
+        serialNumbers << QString::fromUtf8(segments[9]);
 
         Protocol::DeviceInformationApi::instance()->updateDeviceInformation(deviceName, serialNumbers, firmwareVersion);
+        advertiseModeSwitches(); // Kinda dirty but we ball
     }
 }

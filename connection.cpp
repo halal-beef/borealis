@@ -17,7 +17,7 @@ Connection::Connection(ProtocolHandler *handler, QObject *parent)
     m_discoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
     connect(m_discoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered, this, &Connection::deviceDiscovered);
     connect(m_handler, &ProtocolHandler::event, this, &Connection::protocolEvent);
-    connect(m_handler, &ProtocolHandler::quirkPacketNeeded, this, &Connection::writeData);
+    connect(m_handler, &ProtocolHandler::sendPacket, this, &Connection::writeData);
 
     connect(&m_localDevice, &QBluetoothLocalDevice::deviceConnected, this, &Connection::deviceConnected);
 }
@@ -41,10 +41,9 @@ void Connection::scan()
     QBluetoothLocalDevice localDev;
     const QList<QBluetoothAddress> connected = localDev.connectedDevices();
 
-    if (!connected.isEmpty()) {
-        qDebug() << "Found" << connected.size() << "connected devices";
-        for (const QBluetoothAddress &addr : connected) {
-            qDebug() << "  Trying" << addr.toString();
+   if (!connected.isEmpty()) {
+        for (const QBluetoothAddress &addr : connected)
+        {
             if (tryConnect(addr))
                 return;
         }

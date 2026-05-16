@@ -14,6 +14,7 @@ namespace AACP {
 
         quint16 psm() const override { return AAP_PSM; }
         QList<QByteArray> initPackets() const override;
+        bool supportsAddress(const QBluetoothAddress &address) const override;
         bool supportsDevice(const QBluetoothDeviceInfo &info) const override;
         void handlePacket(const QByteArray &data) override;
 
@@ -22,6 +23,8 @@ namespace AACP {
         void parseEarDetect(const QByteArray &data);
         void parseControl(const QByteArray &data);
         void parseDeviceInfo(const QByteArray &data);
+        void advertiseModeSwitches() const;
+        void modeSwitchUpdated(const int mode);
     };
 }
 

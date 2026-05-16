@@ -22,10 +22,13 @@ add_executable(borealis
   protocol/battery.cpp
   protocol/device_information.cpp
   protocol/ear_detection.cpp
+  protocol/mode_switch.cpp
   aacp/protocol.cpp
   aacp/battery.cpp
+  aacp/control_command.cpp
   aacp/device_information.cpp
   aacp/ear_detection.cpp
+  aacp/mode_switch.cpp
   main.cpp
 )
 target_link_libraries(borealis Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Bluetooth Qt${QT_VERSION_MAJOR}::DBus bluetooth)
