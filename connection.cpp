@@ -26,7 +26,7 @@ void Connection::deviceConnected(const QBluetoothAddress &address)
 {
     if (address == m_pendingAddress) {
         m_pendingAddress = QBluetoothAddress();
-        sleep(2); // Dirty but we have to wait or else the headphones don't handshake properly, nor does it deliver all notifications.
+        sleep(3.5); // Dirty but we have to wait or else the headphones don't handshake properly, nor does it deliver all notifications.
         tryConnect(address);
     }
 }
